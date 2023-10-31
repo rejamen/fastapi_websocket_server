@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title%} Client Messages {% endblock %}
+
+{% block content %}
+    <div class="content">
+        <nav class="navbar sticky-bottom bg-body-tertiary">
+            <div class="container-fluid">
+                <div>
+                    <a href="/" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                    <button type="button" class="btn btn-primary" client-id="{{ client_id }}" data-bs-toggle="modal" data-bs-target="#deleteMessagesModal">
+                        <i class="bi bi-trash-fill" 
+                           data-bs-toggle="modal"
+                           data-bs-target="#deleteMessagesModal"></i> 
+                           Erase All
+                    </button>
+                </div>
+            </div>
+        </nav>
+            <div class="message-container">
+                {% for message in messages %}
+                    <div class="message">
+                        {{ message['content'] }}
+                    </div>
+                {% endfor %}
+            </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div>
+        <div class="modal fade" id="deleteMessagesModal" tabindex="-1" aria-labelledby="deleteMessagesModal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="deleteModalLabel">Delete Messages</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="delete-messages-form" action="/messages" method="post">
+                        <input name="client-to-delete-messages" id="client-to-delete-messages" type="hidden" class="form-control" aria-label="Key" required>
+                        <div class="modal-body">
+                            <p>Are you sure you want to delete all messages?</p>
+                        </br>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg"></i> Confirm
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock%}
+
+{% block scripts %}
+    <script>
+        $(document).ready(function() {
+            $('#deleteMessagesModal').on('show.bs.modal', function (event) {
+                let idToDelete = $(event.relatedTarget).attr('client-id');
+                console.log(idToDelete);
+                $('#client-to-delete-messages').val(idToDelete);
+            });
+            $('#delete-messages-form').submit(function(e) {
+                e.preventDefault();
+                let idToDelete = $('input[name="client-to-delete-messages"]').val();
+                $.ajax({
+                    url: '/messages/' + idToDelete,
+                    type: 'DELETE',
+                    success: function(response) {
+                        location.reload();
+                    },
+                    error: function(error) {
+                        $('#response').html('Error: ' + error.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

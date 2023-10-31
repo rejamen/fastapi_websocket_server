@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% block head%}
+            <meta charset='utf-8'>
+            <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+            <title>{% block title %}{% endblock %}</title>
+            <meta name='viewport' content='width=device-width, initial-scale=1'>
+            
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"/>
+            <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+        {% endblock %}
+    </head>
+    <body>
+        <header>{% block header %}{% endblock %}</header>
+        <main>
+            {% block main %}
+                {% block sidebar %}
+                    <div class="sidebar">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if active_messages else ''}}" href="/messages">
+                                    <i class="bi bi-chat-square-text"></i> Messages 
+                                </a>
+                                <!-- 
+                                    To Add more items in the side bar, keep in mind to handle the `active`
+                                    class in the `a` tag. This will show a blue line in the Left side to
+                                    differentiate the active page.
+                                -->
+                            </li>
+                        </ul>
+                    </div>
+                {% endblock %}
+
+                {% block content %} 
+                    <!-- 
+                        Add in this block the content of the page while extending base.html
+                    -->
+                {% endblock %}
+            {% endblock %}
+        </main>
+        <footer>{% block footer %}{% endblock %}</footer>
+        
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+        
+        {% block scripts %}
+            <!-- 
+                Add in this block the scripts that you want to include in the page while extending base.html
+            -->
+        {% endblock %}
+        
+    </body>
+</html>

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title%} Websocket Clients {% endblock %}
+
+{% block content %}
+    <div class="content">
+        <div class="kanban">
+            {% for client in clients %}
+                <a href="/client/{{ client.id }}/details">
+                    <div class="card">
+                        <h5 class="card-header">{{ client.name }}</h5>
+                        <div class="card-body">
+                            <div style="margin-top: 10px; display: flex; justify-content: space-around;">
+                                <div>
+                                </div>
+                                <div>
+                                    <span class='text-muted'>Messages </span>
+                                    <div id="message-count-{{ client.id }}" class="badge bg-primary text-wrap">
+                                        {{ client.message_count }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+    
+{% block scripts %}
+    <script>
+        $(document).ready(function() {
+            $('#delete-messages-form').submit(function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: '/messages',
+                    type: 'DELETE',
+                    success: function(response) {
+                        location.reload();
+                    },
+                    error: function(error) {
+                        $('#response').html('Error: ' + error.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <script>
+        /**
+         * Generates a Universally Unique Identifier (UUID) or Version 4 UUID and stores it in local storage.
+         *
+         * @returns {string} The generated or retrieved UUID.
+         */
+        function generateUUID() {
+            // Check if the UUID is already stored in local storage
+            let clientUUID = localStorage.getItem('clientUUID');
+            if (!clientUUID) {
+                // If the UUID doesn't exist in local storage, generate a new one and store it
+                clientUUID = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    let r = Math.random() * 16 | 0,
+                        v = c == 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+                // Store the generated UUID in local storage
+                localStorage.setItem('clientUUID', clientUUID);
+            }   
+            return clientUUID;
+        };
+        /**
+         * Sets up a WebSocket connection to a specified server and handle WebSocket events.
+         *
+         * @function
+         */
+        function setupWebSocket() {
+            const serverIP = 'fastapi_ip_address';
+            const serverPort = 'fastapi_port';
+            
+            const socket = new WebSocket(`ws://${serverIP}:${serverPort}/ws`);
+
+            socket.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                updateMessageData(message);
+            };
+
+            socket.onopen = function() {
+                console.log("WebSocket connection established.");
+                const clientUUID = generateUUID();
+                // Send a message to identify this client as a UI client
+                const identificationMessage = {
+                    type: "ui-client",
+                    content: "JS client",
+                    uuid: clientUUID,
+                };
+                socket.send(JSON.stringify(identificationMessage));
+            };
+
+            socket.onclose = function(event) {
+                if (event.wasClean) {
+                    console.log(`WebSocket closed cleanly, code=${event.code}, reason=${event.reason}`);
+                } else {
+                    console.error(`WebSocket connection died`);
+                }
+            };
+
+            function updateMessageData(message) {
+                if (message.type === 'message') {
+                    clientUuid = message.client_uuid;
+                    // get value written in the badge to add 1
+                    let message_count = parseInt($(`#message-count-${clientUuid}`).html());
+                    message_count += 1;
+                    // update the badge
+                    $(`#message-count-${clientUuid}`).html(message_count);
+                } else if (message.type === 'refresh') {
+                    /** these messages can be send from backend to refresh the whole page.
+                     * Only needed the very first time when a message is received but the
+                     * client was not created, and the landing page was empty. 
+                     * Sending the first message from  non existing client in the backend
+                     * database will refresh the page.        
+                     */
+                   location.reload();
+                }
+            };
+        };
+        setupWebSocket();
+    </script>
+{% endblock %}

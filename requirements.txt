@@ -1,0 +1,4 @@
+fastapi
+uvicorn[standard]
+Jinja2
+motor
